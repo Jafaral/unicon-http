@@ -1,0 +1,38 @@
+import uhttp
+
+link basename
+link xoptions
+#<p>
+#	The procedure <tt>usage</tt> sends the correct format to run the server
+#</p>
+procedure usage()
+   prog := basename(&progname)
+   write("Usage: ", prog, " [options]\n")
+   write(prog, " is a unicon http server")
+   write("Options:")
+   write("\t -a : address to bind to, default to any addr")
+   write("\t -p : port to use, default to 8080")
+   write("\t -h : show this help\n")
+   exit(-1)
+end
+
+
+#<p>
+#	The procedure <tt>main</tt> calls the run method to start the server
+#		<[param args arguments from the command line]>
+#</p>
+procedure main(args)
+   local opts, port, addr
+   opts := xoptions(args, "ha:p+")
+   /opts["h"] | usage()
+   read_config("config.ini")
+   readPassFile("credentials.txt")
+   Logger("uhttpserv.log", config["LOG_LEVEL"])
+   addr := \opts["a"] | ""
+   port := \opts["p"] | "8080"
+   0 < port < 65536 | stop("invalid port: ", port)
+   sock_list := mutex(set())
+   trap("SIGINT", sig)
+   tcp_server := TCPServer(addr || ":" || port)
+   tcp_server.run()
+end
